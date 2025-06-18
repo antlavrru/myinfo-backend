@@ -2,7 +2,6 @@
 require('dotenv').config(); // Загружает переменные из .env файла
 
 const express = require('express');
-// const cors = require('cors'); // <--- ЭТУ СТРОКУ НУЖНО ЗАКОММЕНТИРОВАТЬ ИЛИ УДАЛИТЬ!
 const admin = require('firebase-admin');
 const crypto = require('crypto'); // Для проверки Telegram initData
 
@@ -40,9 +39,7 @@ const db = admin.firestore(); // Получаем экземпляр Cloud Fires
 const app = express();
 const port = process.env.PORT || 3000;
 
-// app.use(cors()); // <--- ЭТУ СТРОКУ НУЖНО ЗАКОММЕНТИРОВАТЬ ИЛИ УДАЛИТЬ!
 app.use(express.json()); // Для парсинга JSON-тел запросов
-// app.use(express.urlencoded({ extended: true })); // <--- ЭТУ СТРОКУ МОЖНО УДАЛИТЬ, она не нужна для JSON
 
 // --- Функция для проверки подлинности Telegram initData ---
 // Эта функция остаётся без изменений
@@ -70,6 +67,11 @@ function validateTelegramInitData(initData) { //
 
 // --- Маршрут для сохранения отзыва ---
 app.post('/submit-review', async (req, res) => { //
+    // Добавь эти строки для отладки:
+    console.log('*** ПОЛУЧЕН POST ЗАПРОС НА /submit-review ***');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+
     try {
         const { initData, reviewText } = req.body; //
 
@@ -108,7 +110,7 @@ app.post('/submit-review', async (req, res) => { //
         res.status(200).send({ message: 'Review submitted successfully', reviewId: docRef.id }); //
 
     } catch (error) {
-        console.error('Error submitting review:', error); //
+        console.error('Error submitting review in POST /submit-review:', error); // Обновил сообщение об ошибке для ясности
         res.status(500).send('Error submitting review. Please try again later.'); //
     }
 });
