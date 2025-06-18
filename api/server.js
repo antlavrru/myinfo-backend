@@ -41,28 +41,43 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json()); // Для парсинга JSON-тел запросов
 
-// --- Функция для проверки подлинности Telegram initData ---
-// Эта функция остаётся без изменений
-function validateTelegramInitData(initData) { //
-    if (!BOT_TOKEN) { //
-        console.error("BOT_TOKEN is not defined. Cannot validate initData."); //
-        return false; // Не можем проверить без токена
-    }
+// --- Функция для проверки Telegram initData ---
+function validateTelegramInitData(initData) {
+    console.log('--- STARTING initData VALIDATION ---'); // NEW LOG
+    console.log('Input initData string:', initData); // NEW LOG
 
-    const params = new URLSearchParams(initData); //
-    const hash = params.get('hash'); //
-    params.delete('hash'); //
+    const items = initData.split('&').map(item => item.split('='));
+    console.log('Parsed items (key=value pairs):', items); // NEW LOG
 
-    const dataCheckString = Array.from(params.entries()) //
-        .filter(([key]) => key !== 'hash') //
-        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) //
-        .map(([key, value]) => `${key}=${value}`) //
-        .join('\n'); //
+    const dataCheckString = items
+        .filter(([key]) => key !== 'hash')
+        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+        .map(([key, value]) => {
+            const decodedValue = decodeURIComponent(value);
+            console.log(`  Processing: ${key}=${value} -> Decoded: ${key}=${decodedValue}`); // NEW LOG
+            return `${key}=${decodedValue}`;
+        })
+        .join('\n'); // Соединяем строки с символом новой строки
 
-    const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest(); //
-    const hmac = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex'); //
+    console.log('dataCheckString (for hash calculation):'); // NEW LOG
+    console.log(dataCheckString); // NEW LOG
+    console.log('--- END dataCheckString ---'); // NEW LOG
 
-    return hmac === hash; //
+    const hash = items.find(([key]) => key === 'hash')[1];
+    console.log('Extracted hash from initData:', hash); // NEW LOG
+
+    // Вычисляем секретный ключ
+    const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
+    console.log('Secret Key (HMAC SHA256 "WebAppData" with BOT_TOKEN, digest hex):', secretKey.toString('hex')); // NEW LOG
+
+    // Вычисляем хэш данных
+    const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+    console.log('Calculated checkHash:', checkHash); // NEW LOG
+
+    const isValid = checkHash === hash;
+    console.log('Validation Result (checkHash === hash):', isValid); // NEW LOG
+    console.log('--- ENDING initData VALIDATION ---'); // NEW LOG
+    return isValid;
 }
 
 // --- Маршрут для сохранения отзыва ---
