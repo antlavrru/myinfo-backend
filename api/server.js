@@ -75,6 +75,13 @@ app.post('/submit-review', async (req, res) => { //
     try {
         const { initData, reviewText } = req.body; //
 
+         console.log('Received initData:', initData);
+        if (initData) {
+            console.log('BOT_TOKEN (на бэкенде):', BOT_TOKEN ? 'Установлен' : 'НЕ установлен или пуст');
+            const isValid = validateTelegramInitData(initData);
+            console.log('Is initData valid?', isValid);
+        }
+
         if (!initData || !validateTelegramInitData(initData)) { //
             console.warn('Invalid or missing initData received.'); //
             return res.status(401).send('Unauthorized: Invalid Telegram data.'); //
