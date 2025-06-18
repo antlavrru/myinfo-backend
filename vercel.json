@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/submit-review",
-      "destination": "/server.js"
+      "destination": "/api/server.js"
     },
     {
       "source": "/(.*)",
-      "destination": "/server.js"
+      "destination": "/api/server.js"
     }
   ],
   "headers": [
